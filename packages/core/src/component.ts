@@ -3,7 +3,7 @@
 // This file is licensed under the MIT License.
 // License text available at https://opensource.org/licenses/MIT
 
-import {Constructor, Provider, BoundValue} from '@loopback/context';
+import {Constructor, Provider, BoundValue, Binding} from '@loopback/context';
 import {Server} from './server';
 import {Application, ControllerClass} from './application';
 
@@ -12,6 +12,10 @@ import {Application, ControllerClass} from './application';
  */
 export interface ProviderMap {
   [key: string]: Constructor<Provider<BoundValue>>;
+}
+
+export interface ClassMap {
+  [key: string]: Constructor<BoundValue>;
 }
 
 /**
@@ -23,16 +27,41 @@ export interface Component {
    * An array of controller classes
    */
   controllers?: ControllerClass[];
+
   /**
-   * A map of name/class pairs for binding providers
+   * A map of providers to be bound to the application context
+   * * For example:
+   * ```ts
+   * {
+   *   'authentication.strategies.ldap': LdapStrategyProvider
+   * }
+   * ```
    */
   providers?: ProviderMap;
+
+  /**
+   * A map of classes to be bound to the application context.
+   *
+   * For example:
+   * ```ts
+   * {
+   *   'rest.body-parsers.xml': XmlBodyParser
+   * }
+   * ```
+   */
+  classes?: ClassMap;
+
   /**
    * A map of name/class pairs for servers
    */
   servers?: {
     [name: string]: Constructor<Server>;
   };
+
+  /**
+   * An array of bindings
+   */
+  bindings?: Binding[];
 
   /**
    * Other properties
@@ -49,15 +78,27 @@ export interface Component {
  * @param {Component} component
  */
 export function mountComponent(app: Application, component: Component) {
-  if (component.controllers) {
-    for (const controllerCtor of component.controllers) {
-      app.controller(controllerCtor);
+  if (component.classes) {
+    for (const classKey in component.classes) {
+      app.bind(classKey).toClass(component.classes[classKey]);
     }
   }
 
   if (component.providers) {
     for (const providerKey in component.providers) {
       app.bind(providerKey).toProvider(component.providers[providerKey]);
+    }
+  }
+
+  if (component.bindings) {
+    for (const binding of component.bindings) {
+      app.add(binding);
+    }
+  }
+
+  if (component.controllers) {
+    for (const controllerCtor of component.controllers) {
+      app.controller(controllerCtor);
     }
   }
 
