@@ -20,6 +20,7 @@ import * as fs from 'fs';
 import {RestServerConfig} from '../..';
 
 const FIXTURES = path.resolve(__dirname, '../../../fixtures');
+const ASSETS = path.resolve(FIXTURES, 'assets');
 
 describe('RestServer (integration)', () => {
   it('exports url property', async () => {
@@ -81,7 +82,7 @@ describe('RestServer (integration)', () => {
   });
 
   it('allows static assets to be mounted at /', async () => {
-    const root = FIXTURES;
+    const root = ASSETS;
     const server = await givenAServer({
       rest: {
         port: 0,
@@ -97,7 +98,7 @@ describe('RestServer (integration)', () => {
   });
 
   it('allows static assets via api', async () => {
-    const root = FIXTURES;
+    const root = ASSETS;
     const server = await givenAServer({
       rest: {
         port: 0,
@@ -115,7 +116,7 @@ describe('RestServer (integration)', () => {
   });
 
   it('allows static assets to be mounted on multiple paths', async () => {
-    const root = FIXTURES;
+    const root = ASSETS;
     const server = await givenAServer({
       rest: {
         port: 0,
@@ -124,6 +125,7 @@ describe('RestServer (integration)', () => {
 
     server.static('/html-0', root);
     server.static('/html-1', root);
+
     const content = fs
       .readFileSync(path.join(root, 'index.html'))
       .toString('utf-8');
@@ -138,27 +140,36 @@ describe('RestServer (integration)', () => {
   });
 
   it('allows static assets to be mounted on the same path multiple times', async () => {
-    const root = FIXTURES;
-    const dirA = path.join(root, 'dir-a');
+    const root = ASSETS;
+    const otherAssets = path.join(FIXTURES, 'other-assets');
     const server = await givenAServer({
       rest: {
         port: 0,
       },
     });
 
-    server.static('/html', dirA);
     server.static('/html', root);
-    const content = fs
-      .readFileSync(path.join(dirA, 'index.html'))
+    server.static('/html', otherAssets);
+
+    let content = fs
+      .readFileSync(path.join(root, 'index.html'))
       .toString('utf-8');
     await createClientForHandler(server.requestHandler)
       .get('/html/index.html')
       .expect('Content-Type', /text\/html/)
       .expect(200, content);
+
+    content = fs
+      .readFileSync(path.join(otherAssets, 'robots.txt'))
+      .toString('utf-8');
+    await createClientForHandler(server.requestHandler)
+      .get('/html/robots.txt')
+      .expect('Content-Type', /text\/plain/)
+      .expect(200, content);
   });
 
   it('allows static assets via api after start', async () => {
-    const root = FIXTURES;
+    const root = ASSETS;
     const server = await givenAServer({
       rest: {
         port: 0,
@@ -176,7 +187,7 @@ describe('RestServer (integration)', () => {
   });
 
   it('allows non-static routes after assets', async () => {
-    const root = FIXTURES;
+    const root = ASSETS;
     const server = await givenAServer({
       rest: {
         port: 0,
@@ -191,7 +202,7 @@ describe('RestServer (integration)', () => {
   });
 
   it('gives precedence to API routes over static assets', async () => {
-    const root = FIXTURES;
+    const root = ASSETS;
     const server = await givenAServer({
       rest: {
         port: 0,
@@ -206,7 +217,7 @@ describe('RestServer (integration)', () => {
   });
 
   it('registers controllers defined later than static assets', async () => {
-    const root = FIXTURES;
+    const root = ASSETS;
     const server = await givenAServer({
       rest: {
         port: 0,
