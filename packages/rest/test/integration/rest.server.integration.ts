@@ -12,7 +12,7 @@ import {
   httpsGetAsync,
   givenHttpServerConfig,
 } from '@loopback/testlab';
-import {RestBindings, RestServer, RestComponent} from '../..';
+import {RestBindings, RestServer, RestComponent, get} from '../..';
 import {IncomingMessage, ServerResponse} from 'http';
 import * as yaml from 'js-yaml';
 import * as path from 'path';
@@ -203,6 +203,21 @@ describe('RestServer (integration)', () => {
     await createClientForHandler(server.requestHandler)
       .get('/html/index.html')
       .expect(200, 'Hello');
+  });
+
+  it('registers controllers defined later than static assets', async () => {
+    const root = FIXTURES;
+    const server = await givenAServer({
+      rest: {
+        port: 0,
+      },
+    });
+    server.static('/html', root);
+    server.controller(DummyController);
+
+    await createClientForHandler(server.requestHandler)
+      .get('/html')
+      .expect(200, 'Hi');
   });
 
   it('allows cors', async () => {
@@ -639,5 +654,15 @@ paths:
     const {response} = handler;
     response.write('Hello');
     response.end();
+  }
+
+  class DummyController {
+    constructor() {}
+    @get('/html', {
+      responses: {},
+    })
+    ping(): string {
+      return 'Hi';
+    }
   }
 });
