@@ -17,6 +17,9 @@ import {IncomingMessage, ServerResponse} from 'http';
 import * as yaml from 'js-yaml';
 import * as path from 'path';
 import * as fs from 'fs';
+import * as util from 'util';
+const readFileAsync = util.promisify(fs.readFile);
+
 import {RestServerConfig} from '../..';
 
 const FIXTURES = path.resolve(__dirname, '../../../fixtures');
@@ -139,7 +142,7 @@ describe('RestServer (integration)', () => {
       .expect(200, content);
   });
 
-  it('allows static assets to be mounted on the same path multiple times', async () => {
+  it('merges different static asset directories when mounted on the same path', async () => {
     const root = ASSETS;
     const otherAssets = path.join(FIXTURES, 'other-assets');
     const server = await givenAServer({
@@ -151,17 +154,13 @@ describe('RestServer (integration)', () => {
     server.static('/html', root);
     server.static('/html', otherAssets);
 
-    let content = fs
-      .readFileSync(path.join(root, 'index.html'))
-      .toString('utf-8');
+    let content = await readFileFromDirectory(root, 'index.html');
     await createClientForHandler(server.requestHandler)
       .get('/html/index.html')
       .expect('Content-Type', /text\/html/)
       .expect(200, content);
 
-    content = fs
-      .readFileSync(path.join(otherAssets, 'robots.txt'))
-      .toString('utf-8');
+    content = await readFileFromDirectory(otherAssets, 'robots.txt');
     await createClientForHandler(server.requestHandler)
       .get('/html/robots.txt')
       .expect('Content-Type', /text\/plain/)
@@ -675,5 +674,12 @@ paths:
     ping(): string {
       return 'Hi';
     }
+  }
+
+  function readFileFromDirectory(
+    dirname: string,
+    filename: string,
+  ): Promise<string> {
+    return readFileAsync(path.join(dirname, filename), {encoding: 'utf-8'});
   }
 });

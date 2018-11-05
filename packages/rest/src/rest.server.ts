@@ -313,7 +313,7 @@ export class RestServer extends Context implements Server, HttpServerLike {
 
     this.staticAssets.forEach(assetEntry => {
       const {path, rootDir, options} = assetEntry;
-      this.httpHandler.registerStaticAssets(path, rootDir, options);
+      this._httpHandler.registerStaticAssets(path, rootDir, options);
     });
   }
 
@@ -621,15 +621,12 @@ export class RestServer extends Context implements Server, HttpServerLike {
    * @param options Options for serve-static
    */
   static(path: PathParams, rootDir: string, options?: ServeStaticOptions) {
-    if (this._httpHandler) {
-      this.httpHandler.registerStaticAssets(path, rootDir, options);
-    } else {
-      this.staticAssets.push({
-        path,
-        rootDir,
-        options,
-      });
-    }
+    this.staticAssets.push({
+      path,
+      rootDir,
+      options,
+    });
+    delete this._httpHandler;
   }
 
   /**
