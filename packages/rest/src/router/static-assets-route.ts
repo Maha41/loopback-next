@@ -32,7 +32,9 @@ export class StaticAssetsRoute implements RouteEntry, ResolvedRoute {
     responses: {},
   };
 
-  private readonly _expressRouter: express.Router = express.Router();
+  constructor(
+    private readonly _expressRouter: express.Router = express.Router(),
+  ) {}
 
   public registerAssets(
     path: PathParams,

@@ -270,7 +270,7 @@ export class RestServer extends Context implements Server, HttpServerLike {
      * Check if there is custom router in the context
      */
     const router = this.getSync(RestBindings.ROUTER, {optional: true});
-    const routingTable = new RoutingTable(router);
+    const routingTable = new RoutingTable(router, this.expressStaticRouter);
 
     this._httpHandler = new HttpHandler(this, routingTable);
     for (const b of this.find('controllers.*')) {
@@ -310,11 +310,6 @@ export class RestServer extends Context implements Server, HttpServerLike {
         this._setupOperation(verb, path, routeSpec);
       }
     }
-
-    this.staticAssets.forEach(assetEntry => {
-      const {path, rootDir, options} = assetEntry;
-      this._httpHandler.registerStaticAssets(path, rootDir, options);
-    });
   }
 
   private _setupOperation(verb: string, path: string, spec: OperationObject) {
@@ -610,7 +605,8 @@ export class RestServer extends Context implements Server, HttpServerLike {
     );
   }
 
-  private staticAssets: StaticAssetsEntry[] = [];
+  // Express router for handling static assets
+  private expressStaticRouter = express.Router();
 
   /**
    * Mount static assets to the REST server.
@@ -621,12 +617,7 @@ export class RestServer extends Context implements Server, HttpServerLike {
    * @param options Options for serve-static
    */
   static(path: PathParams, rootDir: string, options?: ServeStaticOptions) {
-    this.staticAssets.push({
-      path,
-      rootDir,
-      options,
-    });
-    delete this._httpHandler;
+    this.expressStaticRouter.use(path, express.static(rootDir, options));
   }
 
   /**

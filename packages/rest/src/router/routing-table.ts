@@ -26,6 +26,7 @@ import {RestRouter} from './rest-router';
 import {ResolvedRoute, RouteEntry} from './route-entry';
 import {StaticAssetsRoute} from './static-assets-route';
 import {TrieRouter} from './trie-router';
+import * as express from 'express';
 
 const debug = debugFactory('loopback:rest:routing-table');
 
@@ -33,7 +34,12 @@ const debug = debugFactory('loopback:rest:routing-table');
  * Routing table
  */
 export class RoutingTable {
-  constructor(private readonly _router: RestRouter = new TrieRouter()) {}
+  constructor(
+    private readonly _router: RestRouter = new TrieRouter(),
+    private readonly _expressStaticRouter: express.Router = express.Router(),
+  ) {
+    this._staticAssetsRoute = new StaticAssetsRoute(_expressStaticRouter);
+  }
 
   private _staticAssetsRoute: StaticAssetsRoute;
 
@@ -42,9 +48,6 @@ export class RoutingTable {
     rootDir: string,
     options?: ServeStaticOptions,
   ) {
-    if (!this._staticAssetsRoute) {
-      this._staticAssetsRoute = new StaticAssetsRoute();
-    }
     this._staticAssetsRoute.registerAssets(path, rootDir, options);
   }
 
