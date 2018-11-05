@@ -36,12 +36,11 @@ const debug = debugFactory('loopback:rest:routing-table');
 export class RoutingTable {
   constructor(
     private readonly _router: RestRouter = new TrieRouter(),
-    private readonly _expressStaticRouter: express.Router = express.Router(),
-  ) {
-    this._staticAssetsRoute = new StaticAssetsRoute(_expressStaticRouter);
-  }
-
-  private _staticAssetsRoute: StaticAssetsRoute;
+    /**
+     * A route for static assets
+     */
+    private readonly _staticAssetsRoute = new StaticAssetsRoute(),
+  ) {}
 
   registerStaticAssets(
     path: PathParams,
