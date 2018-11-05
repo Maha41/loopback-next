@@ -127,7 +127,7 @@ describe('RestApplication (integration)', () => {
       .expect('Hello');
   });
 
-  it('gives precedence to API controllers over static assets', async () => {
+  it('registers controllers defined later than static assets', async () => {
     const root = FIXTURES;
     givenApplication();
     restApp.static('/html', root);

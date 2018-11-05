@@ -311,8 +311,8 @@ export class RestServer extends Context implements Server, HttpServerLike {
       }
     }
 
-    this.staticRoutes.forEach(route => {
-      const {path, rootDir, options} = route;
+    this.staticAssets.forEach(assetEntry => {
+      const {path, rootDir, options} = assetEntry;
       this.httpHandler.registerStaticAssets(path, rootDir, options);
     });
   }
@@ -610,7 +610,7 @@ export class RestServer extends Context implements Server, HttpServerLike {
     );
   }
 
-  private staticRoutes: staticAssetOptions[] = [];
+  private staticAssets: StaticAssetsEntry[] = [];
 
   /**
    * Mount static assets to the REST server.
@@ -624,7 +624,7 @@ export class RestServer extends Context implements Server, HttpServerLike {
     if (this._httpHandler) {
       this.httpHandler.registerStaticAssets(path, rootDir, options);
     } else {
-      this.staticRoutes.push({
+      this.staticAssets.push({
         path,
         rootDir,
         options,
@@ -863,8 +863,8 @@ export type RestServerConfig = RestServerOptions & HttpServerOptions;
 /**
  * Options for handling static assets
  */
-export type staticAssetOptions = {
+export interface StaticAssetsEntry {
   path: PathParams;
   rootDir: string;
   options?: ServeStaticOptions;
-};
+}
