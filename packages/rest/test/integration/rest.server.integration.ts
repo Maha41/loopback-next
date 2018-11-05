@@ -114,6 +114,49 @@ describe('RestServer (integration)', () => {
       .expect(200, content);
   });
 
+  it('allows static assets to be mounted on multiple paths', async () => {
+    const root = FIXTURES;
+    const server = await givenAServer({
+      rest: {
+        port: 0,
+      },
+    });
+
+    server.static('/html-0', root);
+    server.static('/html-1', root);
+    const content = fs
+      .readFileSync(path.join(root, 'index.html'))
+      .toString('utf-8');
+    await createClientForHandler(server.requestHandler)
+      .get('/html-0/index.html')
+      .expect('Content-Type', /text\/html/)
+      .expect(200, content);
+    await createClientForHandler(server.requestHandler)
+      .get('/html-1/index.html')
+      .expect('Content-Type', /text\/html/)
+      .expect(200, content);
+  });
+
+  it('allows static assets to be mounted on the same path multiple times', async () => {
+    const root = FIXTURES;
+    const dirA = path.join(root, 'dir-a');
+    const server = await givenAServer({
+      rest: {
+        port: 0,
+      },
+    });
+
+    server.static('/html', dirA);
+    server.static('/html', root);
+    const content = fs
+      .readFileSync(path.join(dirA, 'index.html'))
+      .toString('utf-8');
+    await createClientForHandler(server.requestHandler)
+      .get('/html/index.html')
+      .expect('Content-Type', /text\/html/)
+      .expect(200, content);
+  });
+
   it('allows static assets via api after start', async () => {
     const root = FIXTURES;
     const server = await givenAServer({

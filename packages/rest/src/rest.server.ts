@@ -310,6 +310,11 @@ export class RestServer extends Context implements Server, HttpServerLike {
         this._setupOperation(verb, path, routeSpec);
       }
     }
+
+    this.staticRoutes.forEach(route => {
+      const {path, rootDir, options} = route;
+      this.httpHandler.registerStaticAssets(path, rootDir, options);
+    });
   }
 
   private _setupOperation(verb: string, path: string, spec: OperationObject) {
@@ -605,6 +610,8 @@ export class RestServer extends Context implements Server, HttpServerLike {
     );
   }
 
+  private staticRoutes: staticAssetOptions[] = [];
+
   /**
    * Mount static assets to the REST server.
    * See https://expressjs.com/en/4x/api.html#express.static
@@ -614,7 +621,15 @@ export class RestServer extends Context implements Server, HttpServerLike {
    * @param options Options for serve-static
    */
   static(path: PathParams, rootDir: string, options?: ServeStaticOptions) {
-    this.httpHandler.registerStaticAssets(path, rootDir, options);
+    if (this._httpHandler) {
+      this.httpHandler.registerStaticAssets(path, rootDir, options);
+    } else {
+      this.staticRoutes.push({
+        path,
+        rootDir,
+        options,
+      });
+    }
   }
 
   /**
@@ -844,3 +859,12 @@ export interface RestServerOptions {
  * @interface RestServerConfig
  */
 export type RestServerConfig = RestServerOptions & HttpServerOptions;
+
+/**
+ * Options for handling static assets
+ */
+export type staticAssetOptions = {
+  path: PathParams;
+  rootDir: string;
+  options?: ServeStaticOptions;
+};

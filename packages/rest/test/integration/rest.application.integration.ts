@@ -7,7 +7,7 @@ import {createRestAppClient, Client, expect} from '@loopback/testlab';
 import {RestApplication} from '../..';
 import * as path from 'path';
 import * as fs from 'fs';
-import {RestServer, RestServerConfig} from '../../src';
+import {RestServer, RestServerConfig, get} from '../../src';
 
 const FIXTURES = path.resolve(__dirname, '../../../fixtures');
 
@@ -45,6 +45,41 @@ describe('RestApplication (integration)', () => {
     client = createRestAppClient(restApp);
     await client
       .get('/public/index.html')
+      .expect(200)
+      .expect(content);
+  });
+
+  it('allows static assets to be mounted on multiple paths', async () => {
+    givenApplication();
+    restApp.static('/html-0', FIXTURES);
+    restApp.static('/html-1', FIXTURES);
+    await restApp.start();
+    const content = fs
+      .readFileSync(path.join(FIXTURES, 'index.html'))
+      .toString('utf-8');
+    client = createRestAppClient(restApp);
+    await client
+      .get('/html-0/index.html')
+      .expect(200)
+      .expect(content);
+    await client
+      .get('/html-1/index.html')
+      .expect(200)
+      .expect(content);
+  });
+
+  it('allows static assets to be mounted on the same path multiple times', async () => {
+    const dirA = path.join(FIXTURES, 'dir-a');
+    givenApplication();
+    restApp.static('/html', dirA);
+    restApp.static('/html', FIXTURES);
+    await restApp.start();
+    const content = fs
+      .readFileSync(path.join(dirA, 'index.html'))
+      .toString('utf-8');
+    client = createRestAppClient(restApp);
+    await client
+      .get('/html/index.html')
       .expect(200)
       .expect(content);
   });
@@ -92,6 +127,19 @@ describe('RestApplication (integration)', () => {
       .expect('Hello');
   });
 
+  it('gives precedence to API controllers over static assets', async () => {
+    const root = FIXTURES;
+    givenApplication();
+    restApp.static('/html', root);
+    restApp.controller(DummyController);
+    await restApp.start();
+    client = createRestAppClient(restApp);
+    await client
+      .get('/html')
+      .expect(200)
+      .expect('Hello');
+  });
+
   it('returns RestServer instance', async () => {
     givenApplication();
     const restServer = restApp.restServer;
@@ -127,5 +175,15 @@ describe('RestApplication (integration)', () => {
   function givenApplication(options?: {rest: RestServerConfig}) {
     options = options || {rest: {port: 0, host: '127.0.0.1'}};
     restApp = new RestApplication(options);
+  }
+
+  class DummyController {
+    constructor() {}
+    @get('/html', {
+      responses: {},
+    })
+    ping(): string {
+      return 'Hello';
+    }
   }
 });
