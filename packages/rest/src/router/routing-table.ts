@@ -26,7 +26,6 @@ import {RestRouter} from './rest-router';
 import {ResolvedRoute, RouteEntry} from './route-entry';
 import {StaticAssetsRoute} from './static-assets-route';
 import {TrieRouter} from './trie-router';
-import * as express from 'express';
 
 const debug = debugFactory('loopback:rest:routing-table');
 
