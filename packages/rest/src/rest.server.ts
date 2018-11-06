@@ -848,12 +848,3 @@ export interface RestServerOptions {
  * @interface RestServerConfig
  */
 export type RestServerConfig = RestServerOptions & HttpServerOptions;
-
-/**
- * Options for handling static assets
- */
-export interface StaticAssetsEntry {
-  path: PathParams;
-  rootDir: string;
-  options?: ServeStaticOptions;
-}

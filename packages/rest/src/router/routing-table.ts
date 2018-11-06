@@ -41,14 +41,6 @@ export class RoutingTable {
     private readonly _staticAssetsRoute = new StaticAssetsRoute(),
   ) {}
 
-  registerStaticAssets(
-    path: PathParams,
-    rootDir: string,
-    options?: ServeStaticOptions,
-  ) {
-    this._staticAssetsRoute.registerAssets(path, rootDir, options);
-  }
-
   /**
    * Register a controller as the route
    * @param spec
